@@ -1,0 +1,11 @@
+[Unit]
+Description=Synchronous Clock Timing
+After=multi-user.target
+ 
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /home/pi/simplex_master_clock.py
+Restart=on-abort
+ 
+[Install]
+WantedBy=multi-user.target
