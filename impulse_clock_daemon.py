@@ -25,7 +25,7 @@ def signal_handler(signal, frame):
     now = datetime.datetime.now()
 
     # Persist clock_minutes to file.
-    print (now.strftime("%Y-%m-%d %H:%M:%S") + " Caught signal at clock time: " + str(clock_minutes) + ", perisisting state.")
+    print (now.strftime("%Y-%m-%d %H:%M:%S") + " Caught signal at clock time: " + str(clock_minutes) + ", persisting state.")
 
     persist_clock_minutes(persist_filename)
 
@@ -58,7 +58,7 @@ def advance_minutes(minutes):
     for x in range(minutes):
         time.sleep(0.5)
         minute_send_pulse(0.5)
-        clock_minutes = clock_minutes + 1
+        clock_minutes = (clock_minutes + 1) % CLOCK_MINUTES_MAX
 
     return minutes
 
@@ -69,10 +69,9 @@ def advance_hours(hours):
         if (AR2_MOVEMENT == True | AR3_MOVEMENT == True):
             if (clock_minutes % MINUTES_PER_HOUR) < 35:
                 minutes_to_get_to_thirty_five = 35 - (clock_minutes % MINUTES_PER_HOUR)
-                clock_minutes = clock_minutes + advance_minutes(minutes_to_get_to_thirty_five)
-
+                advance_minutes(minutes_to_get_to_thirty_five)
             hour_send_pulse(2)
-            clock_minutes = clock_minutes + 25
+            clock_minutes = (clock_minutes + 25) % CLOCK_MINUTES_MAX
         else:
             if (clock_minutes % MINUTES_PER_HOUR) != 0:
                 # Advance to the next hour :00
@@ -140,7 +139,12 @@ def persist_clock_minutes(filename):
     f.close()
 
 def get_persisted_clock_minutes(filename):
-    f = open(filename, "r")
+    try:
+        f = open(filename, "r")
+    except:
+        print ("Persisted clock state file not found: " + filename + ", please specify -m, -h to set the clock.")
+        sys.exit(2)
+
     f.seek(0,0)
     line = f.read()
     f.close()
@@ -154,16 +158,16 @@ def main(argv):
     clock_minute = 0
     set_clock_time = False
 
-    print("Impulse Clock Timing Daemon v0.5, (c) 2021")
+    print("Impulse Clock Timing Daemon v0.6, (c) 2021")
     print("https://github.com/hharte/master-clock\n")
     try:
         opts, args = getopt.getopt(argv,"p:h:m:",["help"])
     except getopt.GetoptError:
-        print ('impulse_clock_timing.py -p <filename> -h <hours> -m <minutes>')
+        print ('impulse_clock_daemon.py -p <filename> -h <hours> -m <minutes>')
         sys.exit(2)
     for opt, arg in opts:
         if opt == "--help":
-            print ('impulse_clock_timing.py --help -p <filename> -h <hours> -m <minutes>')
+            print ('impulse_clock_daemon.py --help -p <filename> -h <hours> -m <minutes>')
             sys.exit()
         elif opt in ("-p"):
             persist_filename = arg
@@ -209,7 +213,7 @@ def main(argv):
             else:
                 minute_send_pulse(2)
 
-            clock_minutes = clock_minutes + 1
+            clock_minutes = (clock_minutes + 1) % CLOCK_MINUTES_MAX
             now = datetime.datetime.now()
             print (now.strftime("%Y-%m-%d %H:%M:%S") + " Clock minutes: ", clock_minutes)
 

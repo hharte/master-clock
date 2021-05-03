@@ -1,0 +1,11 @@
+[Unit]
+Description=Impulse Clock Daemon
+After=multi-user.target
+ 
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /home/pi/master-clock/impulse_clock_daemon.py -p /home/pi/impulse_clock_time.txt
+Restart=on-abort
+ 
+[Install]
+WantedBy=multi-user.target
