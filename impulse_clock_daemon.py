@@ -9,6 +9,7 @@ import time
 from datetime import timedelta
 
 AR2_MOVEMENT = True
+AR2A_MOVEMENT = False
 AR3_MOVEMENT = True
 CLOCK_HOURS = 12
 MINUTES_PER_HOUR = 60
@@ -66,11 +67,15 @@ def advance_hours(hours):
     global clock_minutes
 
     while (hours > 0):
-        if (AR2_MOVEMENT == True | AR3_MOVEMENT == True):
+        if (AR2_MOVEMENT == True or AR3_MOVEMENT == True):
             if (clock_minutes % MINUTES_PER_HOUR) < 35:
                 minutes_to_get_to_thirty_five = 35 - (clock_minutes % MINUTES_PER_HOUR)
                 advance_minutes(minutes_to_get_to_thirty_five)
             hour_send_pulse(2)
+            if (AR2A_MOVEMENT == False):
+                time.sleep(1)
+                minute_send_pulse(0.5)
+                time.sleep(5)
             clock_minutes = (clock_minutes + 25) % CLOCK_MINUTES_MAX
         else:
             if (clock_minutes % MINUTES_PER_HOUR) != 0:
@@ -207,7 +212,7 @@ def main(argv):
 
         # Every minute, after 58s, pulse the minute pin for 2s.
         if now.second == 58:
-            if now.minute == 59:
+            if (now.minute == 59 and AR2A_MOVEMENT == True) or (now.minute == 58 and AR2A_MOVEMENT == False):
                 minute_send_pulse(2) # For clocks without correction, send the minute pulse
                 hour_send_pulse(2)   # along with the hourly correction.
             else:
