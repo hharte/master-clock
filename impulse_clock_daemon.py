@@ -6,8 +6,6 @@ import signal
 import sys
 import time
 
-from datetime import timedelta
-
 AR2_MOVEMENT = True
 AR2A_MOVEMENT = False
 AR3_MOVEMENT = True
@@ -56,7 +54,7 @@ def hour_send_pulse(duration):
 def advance_minutes(minutes):
     global clock_minutes
 
-    for x in range(minutes):
+    for _ in range(minutes):
         time.sleep(0.5)
         minute_send_pulse(0.5)
         clock_minutes = (clock_minutes + 1) % CLOCK_MINUTES_MAX
@@ -66,13 +64,13 @@ def advance_minutes(minutes):
 def advance_hours(hours):
     global clock_minutes
 
-    while (hours > 0):
-        if (AR2_MOVEMENT == True or AR3_MOVEMENT == True):
+    while hours > 0:
+        if (AR2_MOVEMENT is True or AR3_MOVEMENT is True):
             if (clock_minutes % MINUTES_PER_HOUR) < 35:
                 minutes_to_get_to_thirty_five = 35 - (clock_minutes % MINUTES_PER_HOUR)
                 advance_minutes(minutes_to_get_to_thirty_five)
             hour_send_pulse(2)
-            if (AR2A_MOVEMENT == False):
+            if AR2A_MOVEMENT is False:
                 time.sleep(1)
                 minute_send_pulse(0.5)
                 time.sleep(5)
@@ -97,7 +95,7 @@ def calculate_adjustment():
     if adjust_minutes < 0:
         adjust_minutes += CLOCK_MINUTES_MAX
 
-    return (adjust_minutes)
+    return adjust_minutes
 
 # Given the current clock time in minutes, and the number of minutes to adjust,
 # advance the clock to the correct time.
@@ -120,40 +118,40 @@ def adjust_clock(adjust_minutes):
         adjust_hours = adjust_minutes // MINUTES_PER_HOUR
 
         # Adjust hour hand to the correct hour
-        if (adjust_hours > 0):
+        if adjust_hours > 0:
             print("Advancing clock ", adjust_hours, "hours.")
             advance_hours(adjust_hours)
             adjust_minutes = adjust_minutes - (adjust_hours * MINUTES_PER_HOUR)
 
         # Since the hourly adjustment takes a while, recalculate the minute adjustment.
         adjust_minutes = calculate_adjustment()
-        if (adjust_minutes > 0):
+        if adjust_minutes > 0:
             print("Advancing clock ", adjust_minutes, "minutes.")
             advance_minutes(adjust_minutes)
- 
+
             # Even the minute adjustment can take long enough to be off by one minute.
             adjust_minutes = calculate_adjustment()
-            if (adjust_minutes > 0):
+            if adjust_minutes > 0:
                 print("Advancing clock ", adjust_minutes, "minutes.")
                 advance_minutes(adjust_minutes)
 
 def persist_clock_minutes(filename):
     f = open(filename, "w")
     f.seek(0,0)
-    line = f.write(str(clock_minutes))
+    f.write(str(clock_minutes))
     f.close()
 
 def get_persisted_clock_minutes(filename):
     try:
         f = open(filename, "r")
-    except:
+    except OSError:
         print ("Persisted clock state file not found: " + filename + ", please specify -m, -h to set the clock.")
         sys.exit(2)
 
     f.seek(0,0)
     line = f.read()
     f.close()
-    return(int(line))
+    return int(line)
 
 def main(argv):
     global clock_minutes
@@ -166,7 +164,7 @@ def main(argv):
     print("Impulse Clock Timing Daemon v0.6, (c) 2021")
     print("https://github.com/hharte/master-clock\n")
     try:
-        opts, args = getopt.getopt(argv,"p:h:m:",["help"])
+        opts, _ = getopt.getopt(argv,"p:h:m:",["help"])
     except getopt.GetoptError:
         print ('impulse_clock_daemon.py -p <filename> -h <hours> -m <minutes>')
         sys.exit(2)
@@ -174,28 +172,28 @@ def main(argv):
         if opt == "--help":
             print ('impulse_clock_daemon.py --help -p <filename> -h <hours> -m <minutes>')
             sys.exit()
-        elif opt in ("-p"):
+        elif opt in "-p":
             persist_filename = arg
-        elif opt in ("-h"):
+        elif opt in "-h":
             clock_hour = int(arg)
             set_clock_time = True
-        elif opt in ("-m"):
+        elif opt in "-m":
             clock_minute = int(arg)
             set_clock_time = True
 
-    if set_clock_time == True:
+    if set_clock_time is True:
         clock_minutes = ((clock_hour * MINUTES_PER_HOUR) + clock_minute) % CLOCK_MINUTES_MAX
     else:
         clock_minutes = get_persisted_clock_minutes(persist_filename)
 
     adjust_minutes = calculate_adjustment()
 
-    if (adjust_minutes > 0):
+    if adjust_minutes > 0:
         start_adjustment_now = datetime.datetime.now()
         print("current time (minutes):", ((start_adjustment_now.hour * MINUTES_PER_HOUR) + start_adjustment_now.minute) % CLOCK_MINUTES_MAX)
         print("clock time   (minutes):", clock_minutes)
 
-        if (adjust_minutes > 0):
+        if adjust_minutes > 0:
             print (start_adjustment_now.strftime("%Y-%m-%d %H:%M:%S") + " Adjustment of", adjust_minutes, "minutes started.")
             adjust_clock(adjust_minutes)
             end_adjustment_now = datetime.datetime.now()
@@ -212,7 +210,7 @@ def main(argv):
 
         # Every minute, after 58s, pulse the minute pin for 2s.
         if now.second == 58:
-            if (now.minute == 59 and AR2A_MOVEMENT == True) or (now.minute == 58 and AR2A_MOVEMENT == False):
+            if (now.minute == 59 and AR2A_MOVEMENT is True) or (now.minute == 58 and AR2A_MOVEMENT is False):
                 minute_send_pulse(2) # For clocks without correction, send the minute pulse
                 hour_send_pulse(2)   # along with the hourly correction.
             else:
@@ -223,4 +221,4 @@ def main(argv):
             print (now.strftime("%Y-%m-%d %H:%M:%S") + " Clock minutes: ", clock_minutes)
 
 if __name__ == "__main__":
-   main(sys.argv[1:])
+    main(sys.argv[1:])

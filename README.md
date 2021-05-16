@@ -1,5 +1,5 @@
 # Master-Clock Daemon
-
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/cee2a942ecf849fbbd3e340330043e4f)](https://www.codacy.com/gh/hharte/master-clock/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=hharte/master-clock&amp;utm_campaign=Badge_Grade)
 
 # Introduction
 
