@@ -204,6 +204,7 @@ def daemon_loop():
         if now.second == 50:
             if ((now.minute == 59 and AR2A_MOVEMENT is True) or
                     (now.minute == 58 and AR2A_MOVEMENT is False)):
+                PERSISTOBJECT.increment_minutes(1)
                 now = datetime.datetime.now()
                 print(now.strftime("%Y-%m-%d %H:%M:%S") +
                       " Clock minutes: ", PERSISTOBJECT.get_clock_minutes(), "Hourly adjust")
